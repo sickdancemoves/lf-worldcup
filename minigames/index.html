@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>LaFinteca World Cup · Minigames</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&family=IBM+Plex+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --lav:#C3ABFF; --lav-soft:#E0D3FF; --lav-deep:#9988C4;
+  --lime:#BFFE43; --violet:#492B8B; --violet-deep:#1A0638;
+  --black:#000; --ink:#090909; --paper:#F5F5F5;
+  --glass:linear-gradient(rgba(153,136,196,0.16) 0%, rgba(255,255,255,0.06) 100%);
+  --ease:cubic-bezier(0.22,1,0.36,1);
+  --card-aspect:400/496;
+}
+html,body{height:100%}
+body{
+  min-height:100%;background:var(--black);color:var(--paper);
+  font-family:'IBM Plex Sans',sans-serif;-webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+/* ambient backdrop */
+body::before{content:'';position:fixed;inset:0;z-index:-2;
+  background-image:linear-gradient(rgba(195,171,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(195,171,255,0.04) 1px,transparent 1px);
+  background-size:34px 34px;pointer-events:none}
+body::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(ellipse at 18% 0%,rgba(195,171,255,0.12) 0%,transparent 55%),
+             radial-gradient(ellipse at 90% 100%,rgba(191,254,67,0.08) 0%,transparent 55%)}
+
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer}
+
+/* ─── TOP BAR ─── */
+.bar{
+  display:flex;align-items:center;gap:14px;
+  padding:14px clamp(16px,4vw,40px);
+  border-bottom:1px solid rgba(195,171,255,0.16);
+  background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  position:sticky;top:0;z-index:10;
+}
+.bar-back{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;
+  color:rgba(245,245,245,0.55);border:1px solid rgba(255,255,255,0.12);border-radius:999px;
+  padding:7px 14px;transition:all .22s var(--ease);background:transparent;
+}
+.bar-back:hover{color:#fff;border-color:rgba(195,171,255,0.5);background:rgba(195,171,255,0.1)}
+.bar-title{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.34em;text-transform:uppercase;color:var(--lav)}
+.bar-spacer{margin-left:auto;display:flex;align-items:center;gap:14px}
+.chip{
+  font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--lime);border:1px solid rgba(191,254,67,0.3);border-radius:6px;padding:5px 10px;white-space:nowrap;
+}
+.chip.lav{color:var(--lav);border-color:rgba(195,171,255,0.3)}
+
+.wrap{max-width:1100px;margin:0 auto;padding:clamp(20px,4vw,44px) clamp(16px,4vw,40px)}
+.view{display:none}
+.view.on{display:block}
+
+/* ─── PORTAL ─── */
+.hero{text-align:center;margin-bottom:clamp(24px,4vh,48px)}
+.hero h1{font-size:clamp(34px,7vw,72px);font-weight:900;letter-spacing:-0.03em;line-height:0.92;text-transform:uppercase}
+.hero h1 .a{color:#fff}.hero h1 .b{color:var(--lav)}
+.hero p{font-family:'IBM Plex Mono',monospace;font-size:clamp(9px,1.4vw,12px);letter-spacing:0.28em;text-transform:uppercase;color:rgba(245,245,245,0.4);margin-top:14px}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(14px,2.4vw,26px)}
+@media(max-width:680px){.tiles{grid-template-columns:1fr}}
+.tile-link{
+  display:flex;flex-direction:column;gap:12px;
+  padding:clamp(20px,3vw,34px);border-radius:16px;
+  background:var(--glass);border:1px solid rgba(195,171,255,0.16);
+  transition:all .26s var(--ease);position:relative;overflow:hidden;min-height:200px;
+}
+.tile-link:hover{border-color:rgba(195,171,255,0.5);transform:translateY(-3px);box-shadow:0 14px 40px rgba(0,0,0,0.4),0 0 0 1px rgba(195,171,255,0.18)}
+.tile-link .num{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.2em;color:var(--lime)}
+.tile-link h2{font-size:clamp(22px,3vw,32px);font-weight:800;letter-spacing:-0.02em;line-height:1}
+.tile-link p{font-size:14px;line-height:1.5;color:rgba(245,245,245,0.55);max-width:34ch}
+.tile-link .go{margin-top:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:var(--lav);display:flex;align-items:center;gap:8px}
+.tile-link .deco{position:absolute;right:-10px;bottom:-26px;font-weight:900;font-size:150px;line-height:1;color:rgba(195,171,255,0.06);pointer-events:none;user-select:none}
+
+/* ─── BUTTONS ─── */
+.btn{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;
+  padding:11px 20px;border-radius:999px;border:1px solid rgba(195,171,255,0.3);
+  background:rgba(195,171,255,0.08);color:var(--lav-soft);transition:all .22s var(--ease);
+}
+.btn:hover:not(:disabled){background:rgba(195,171,255,0.18);border-color:rgba(195,171,255,0.6);color:#fff}
+.btn:disabled{opacity:0.35;cursor:not-allowed}
+.btn.lime{border-color:rgba(191,254,67,0.4);background:rgba(191,254,67,0.1);color:var(--lime)}
+.btn.lime:hover:not(:disabled){background:rgba(191,254,67,0.2);border-color:rgba(191,254,67,0.7);color:#fff}
+.btn.ghost{background:transparent;border-color:rgba(255,255,255,0.14);color:rgba(245,245,245,0.6)}
+.btn.ghost:hover{color:#fff;border-color:rgba(255,255,255,0.3)}
+.game-head{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:clamp(16px,2.5vh,26px)}
+.game-head h2{font-size:clamp(20px,3vw,28px);font-weight:800;letter-spacing:-0.02em}
+.game-head .right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* ─── MEMORY ─── */
+.board{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:clamp(6px,1vw,12px);
+  width:min(94vw,600px);margin:0 auto;
+}
+@media(max-width:560px){.board{grid-template-columns:repeat(4,1fr);width:min(96vw,420px)}}
+.tile{aspect-ratio:var(--card-aspect);perspective:800px;border:none;background:none;padding:0;position:relative}
+.tile-inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .42s var(--ease)}
+.tile.up .tile-inner{transform:rotateY(180deg)}
+.tile-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:7px;overflow:hidden;border:1px solid rgba(195,171,255,0.18)}
+.tile-front{transform:rotateY(180deg)}
+.tile-face img{width:100%;height:100%;object-fit:cover;display:block}
+.tile.matched .tile-face{border-color:rgba(191,254,67,0.65);box-shadow:0 0 0 1px rgba(191,254,67,0.4),0 0 18px rgba(191,254,67,0.18)}
+.tile:not(.up):not(.matched):hover .tile-back{border-color:rgba(195,171,255,0.5)}
+
+/* ─── GUESS ─── */
+.guess-grid{display:grid;grid-template-columns:1fr 0.85fr;gap:clamp(18px,3vw,40px);align-items:center}
+@media(max-width:680px){.guess-grid{grid-template-columns:1fr;gap:18px}.guess-card-wrap{order:-1}}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{
+  text-align:left;font-size:clamp(15px,1.8vw,18px);font-weight:600;
+  padding:15px 18px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.03);color:var(--paper);transition:all .18s var(--ease);
+  display:flex;align-items:center;gap:12px;
+}
+.opt:hover:not(:disabled){border-color:rgba(195,171,255,0.5);background:rgba(195,171,255,0.08)}
+.opt .dot{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,0.25);flex-shrink:0;transition:all .18s var(--ease)}
+.opt.sel{border-color:var(--lav);background:rgba(195,171,255,0.14)}
+.opt.sel .dot{border-color:var(--lav);background:var(--lav)}
+.opt.correct{border-color:var(--lime);background:rgba(191,254,67,0.14);color:#fff}
+.opt.correct .dot{border-color:var(--lime);background:var(--lime)}
+.opt.wrong{border-color:#ff6b6b;background:rgba(255,107,107,0.12)}
+.opt.wrong .dot{border-color:#ff6b6b;background:#ff6b6b}
+.opt:disabled{cursor:default}
+.guess-card-wrap{display:flex;justify-content:center}
+.guess-card{position:relative;width:100%;max-width:300px;aspect-ratio:var(--card-aspect);border-radius:10px;overflow:hidden;border:1px solid rgba(195,171,255,0.22);box-shadow:0 10px 36px rgba(0,0,0,0.4)}
+.guess-card img{width:100%;height:100%;object-fit:cover;display:block}
+.name-mask{position:absolute;left:0;right:0;bottom:0;height:22%;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,rgba(26,6,56,0.4),rgba(9,9,9,0.96));
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+  font-family:'IBM Plex Mono',monospace;font-weight:700;letter-spacing:0.3em;font-size:clamp(20px,4vw,30px);color:var(--lav);
+  border-top:1px solid rgba(195,171,255,0.3);transition:opacity .3s var(--ease);
+}
+.guess-card.revealed .name-mask{opacity:0;pointer-events:none}
+.guess-actions{margin-top:22px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.verdict{text-align:center;min-height:24px;margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:0.08em}
+.verdict.ok{color:var(--lime)}.verdict.no{color:#ff8585}
+
+/* ─── RESULTS BOARD ─── */
+.results{text-align:center}
+.results .score-big{font-size:clamp(46px,9vw,84px);font-weight:900;line-height:1}
+.results .score-big .of{color:rgba(245,245,245,0.3);font-weight:300}
+.results .verdict-big{font-family:'IBM Plex Mono',monospace;letter-spacing:0.16em;text-transform:uppercase;font-size:clamp(12px,2vw,15px);margin-top:8px}
+.res-cards{display:flex;gap:clamp(8px,1.4vw,16px);justify-content:center;flex-wrap:wrap;margin:clamp(20px,4vh,34px) 0}
+.res-card{width:clamp(84px,14vw,128px);aspect-ratio:var(--card-aspect);border-radius:8px;overflow:hidden;position:relative;border:2px solid}
+.res-card img{width:100%;height:100%;object-fit:cover;display:block}
+.res-card.right{border-color:var(--lime);box-shadow:0 0 16px rgba(191,254,67,0.22)}
+.res-card.wrong{border-color:rgba(255,255,255,0.14)}
+.res-card.wrong img{filter:grayscale(1) brightness(0.7)}
+.res-card .tag{position:absolute;top:5px;right:5px;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800}
+.res-card.right .tag{background:var(--lime);color:#0a0a0a}
+.res-card.wrong .tag{background:rgba(255,255,255,0.18);color:#fff}
+
+/* ─── OVERLAY (memory win) ─── */
+.overlay{position:fixed;inset:0;z-index:50;display:none;align-items:center;justify-content:center;padding:24px;
+  background:rgba(0,0,0,0.74);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.overlay.on{display:flex}
+.panel{
+  background:linear-gradient(rgba(73,43,139,0.3),rgba(9,9,9,0.7));border:1px solid rgba(195,171,255,0.3);
+  border-radius:18px;padding:clamp(28px,5vw,48px);text-align:center;max-width:440px;width:100%;
+  box-shadow:0 24px 70px rgba(0,0,0,0.6)
+}
+.panel .kicker{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;color:var(--lime)}
+.panel h3{font-size:clamp(26px,5vw,40px);font-weight:900;letter-spacing:-0.02em;margin:10px 0 6px}
+.panel .time{font-family:'IBM Plex Mono',monospace;font-size:clamp(30px,7vw,52px);font-weight:700;color:var(--lav)}
+.panel .actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px}
+
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <a class="bar-back" href="../">← Album</a>
+  <span class="bar-title" id="bartitle">Minigames</span>
+  <div class="bar-spacer" id="barextra"></div>
+</div>
+
+<!-- ════ PORTAL ════ -->
+<section class="view wrap" id="view-portal">
+  <div class="hero">
+    <h1><span class="a">Mini</span><span class="b">games</span></h1>
+    <p>LaFinteca · World Cup Album 2026</p>
+  </div>
+  <div class="tiles">
+    <a class="tile-link" href="#memory">
+      <span class="num">01</span>
+      <h2>Memory</h2>
+      <p>Twenty cards, ten pairs. Flip them two at a time and match every player — against the clock.</p>
+      <span class="go">Play →</span>
+      <span class="deco">?</span>
+    </a>
+    <a class="tile-link" href="#guess">
+      <span class="num">02</span>
+      <h2>Who is this player?</h2>
+      <p>Five rounds. We hide the name — you pick it from four options. Five out of five wins.</p>
+      <span class="go">Play →</span>
+      <span class="deco">!</span>
+    </a>
+  </div>
+</section>
+
+<!-- ════ MEMORY ════ -->
+<section class="view wrap" id="view-memory">
+  <div class="game-head">
+    <a class="bar-back" href="#">← Portal</a>
+    <h2>Memory</h2>
+    <div class="right">
+      <span class="chip" id="mem-moves">Moves: 0</span>
+      <span class="chip lav" id="mem-timer">0:00</span>
+      <button class="btn ghost" id="mem-restart">Restart</button>
+    </div>
+  </div>
+  <div class="board" id="mem-board"></div>
+</section>
+
+<!-- ════ GUESS ════ -->
+<section class="view wrap" id="view-guess">
+  <div class="game-head">
+    <a class="bar-back" href="#">← Portal</a>
+    <h2>Who is this player?</h2>
+    <div class="right">
+      <span class="chip" id="guess-round">Round 1 / 5</span>
+      <span class="chip lav" id="guess-score">Score: 0</span>
+    </div>
+  </div>
+
+  <div id="guess-play">
+    <div class="guess-grid">
+      <div class="opts" id="guess-opts"></div>
+      <div class="guess-card-wrap">
+        <div class="guess-card" id="guess-card">
+          <img id="guess-img" alt="Guess this player"/>
+          <div class="name-mask" id="guess-mask">? ? ?</div>
+        </div>
+      </div>
+    </div>
+    <div class="verdict" id="guess-verdict"></div>
+    <div class="guess-actions">
+      <button class="btn lime" id="guess-check" disabled>Check</button>
+      <button class="btn" id="guess-next" style="display:none">Next →</button>
+    </div>
+  </div>
+
+  <div class="results" id="guess-results" style="display:none">
+    <div class="score-big"><span id="res-score">0</span><span class="of"> / 5</span></div>
+    <div class="verdict-big" id="res-verdict"></div>
+    <div class="res-cards" id="res-cards"></div>
+    <div class="guess-actions">
+      <button class="btn lime" id="guess-again">Play again</button>
+      <a class="btn" href="#">Back to portal</a>
+    </div>
+  </div>
+</section>
+
+<!-- ════ MEMORY WIN OVERLAY ════ -->
+<div class="overlay" id="mem-overlay">
+  <div class="panel">
+    <p class="kicker">Cleared</p>
+    <h3>All pairs matched!</h3>
+    <p class="time" id="mem-final">0:00</p>
+    <p style="font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:0.1em;color:rgba(245,245,245,0.5);margin-top:6px" id="mem-final-moves">in 0 moves</p>
+    <div class="actions">
+      <button class="btn lime" id="mem-again">Play again</button>
+      <a class="btn" href="#">Back to portal</a>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════ DATA ═══════════ */
+const PLAYERS = [
+  {file:"ARG_Agustin",  name:"Agustín Rodríguez", country:"Argentina"},
+  {file:"ARG_Candela",  name:"Candela Gutierrez",  country:"Argentina"},
+  {file:"ARG_Gabriel",  name:"Gabriel Guardia",    country:"Argentina"},
+  {file:"ARG_Joasefina",name:"Josefina Tellarini", country:"Argentina"},
+  {file:"ARG_Katia",    name:"Katia De Paoli",     country:"Argentina"},
+  {file:"ARG_Lucia",    name:"Lucía Thormann",     country:"Argentina"},
+  {file:"ARG_Mauricio", name:"Mauricio Ludueña",   country:"Argentina"},
+  {file:"ARG_Victoria", name:"Victoria Mazzurco",  country:"Argentina"},
+  {file:"BOL_Eduardo",  name:"Eduardo Eijo",       country:"Bolivia"},
+  {file:"BOL_Juan",     name:"Manuel Juri",        country:"Bolivia"},
+  {file:"BRA_Alfredo",  name:"Alfredo Luz",        country:"Brasil"},
+  {file:"BRA_Bernardo", name:"Bernardo Mantuano",  country:"Brasil"},
+  {file:"BRA_Fernando", name:"Fernando Plata",     country:"Brasil"},
+  {file:"BRA_Isabel",   name:"Isabel Canestraro",  country:"Brasil"},
+  {file:"BRA_Joao",     name:"Joao Mukuno",        country:"Brasil"},
+  {file:"BRA_Lucas",    name:"Lucas De Lorena",    country:"Brasil"},
+  {file:"BRA_Lucio",    name:"Lucio Vargas",       country:"Brasil"},
+  {file:"BRA_Mariana",  name:"Mariana Caetani",    country:"Brasil"},
+  {file:"BRA_MarianaN", name:"Mariana Neves",      country:"Brasil"},
+  {file:"CHI_Cristian", name:"Cristian Piaggio",   country:"Chile"},
+  {file:"CHI_Diego",    name:"Diego Ampuero",      country:"Chile"},
+  {file:"COL_Juan",     name:"Juan Obregón",       country:"Colombia"},
+  {file:"HON_Rafa",     name:"Rafael Bertrand",    country:"Honduras"},
+  {file:"MEX_Omar",     name:"Omar Resendiz",      country:"México"},
+  {file:"NIC_Carolina", name:"Carolina Narvaez",   country:"Nicaragua"},
+  {file:"UKR_Dmytro",   name:"Dmytro Kutsan",      country:"Ukraine"},
+  {file:"UKR_Elina",    name:"Elina Sandakova",    country:"Ukraine"},
+  {file:"UKR_Kyrylo",   name:"Kyrylo Tryhub",      country:"Ukraine"},
+  {file:"UKR_Mykola",   name:"Mykola Vdovychenko", country:"Ukraine"},
+  {file:"UKR_Nazar",    name:"Nazar Ianko",        country:"Ukraine"},
+  {file:"UKR_Oleg",     name:"Oleg Sverbylo",      country:"Ukraine"},
+  {file:"UKR_Olena",    name:"Olena Kurt",         country:"Ukraine"},
+  {file:"UKR_Petro",    name:"Petro Tsvinkailo",   country:"Ukraine"},
+  {file:"UKR_Ruslan",   name:"Ruslan Chernii",     country:"Ukraine"},
+  {file:"UKR_SerhiiO",  name:"Serhii Onopriienko", country:"Ukraine"},
+  {file:"UKR_SerhiiO_1",name:"Serhii Hanin",       country:"Ukraine"},
+  {file:"UKR_Stanislav",name:"Stanislav Kuznietsov",country:"Ukraine"},
+  {file:"UKR_Tetiana",  name:"Tetiana Kramarenko", country:"Ukraine"},
+  {file:"UKR_Viacheslav",name:"Viacheslav Lesnikov",country:"Ukraine"},
+  {file:"UKR_Vova",     name:"Volodymyr Samoylenko",country:"Ukraine"},
+  {file:"UKR_Yurii",    name:"Yurii Botsvyniuk",   country:"Ukraine"},
+  {file:"URK_Dima",     name:"Dima Rukin",         country:"Ukraine"},
+  {file:"URU_Federico", name:"Federico Hurst",     country:"Uruguay"},
+  {file:"VEN_Luisanna", name:"Luisanna Ferreira",  country:"Venezuela"},
+  {file:"VEN_Mianca",   name:"Mianca Calabrese",   country:"Venezuela"},
+];
+const CARDS = "../assets/cards/";
+const BACK  = "../assets/card-back.png";
+
+/* ═══════════ HELPERS ═══════════ */
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function sample(arr,n){return shuffle(arr).slice(0,n);}
+function fmtTime(s){const m=Math.floor(s/60),sec=s%60;return m+":"+String(sec).padStart(2,"0");}
+
+/* ═══════════ ROUTER ═══════════ */
+const VIEWS={"":"portal","#":"portal","#memory":"memory","#guess":"guess"};
+function route(){
+  const v=VIEWS[location.hash]||"portal";
+  document.querySelectorAll(".view").forEach(el=>el.classList.remove("on"));
+  document.getElementById("view-"+v).classList.add("on");
+  document.getElementById("bartitle").textContent =
+    v==="memory"?"Memory" : v==="guess"?"Who is this player?" : "Minigames";
+  if(v==="memory") Memory.start();
+  if(v==="guess")  Guess.start();
+  if(v!=="memory") Memory.stopTimer();
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",route);
+
+/* ═══════════ MEMORY ═══════════ */
+const Memory = (() => {
+  const board=document.getElementById("mem-board");
+  const timerEl=document.getElementById("mem-timer");
+  const movesEl=document.getElementById("mem-moves");
+  const overlay=document.getElementById("mem-overlay");
+  let first=null, lock=false, matched=0, moves=0, seconds=0, timer=null, started=false;
+
+  function tick(){ seconds++; timerEl.textContent=fmtTime(seconds); }
+  function startTimer(){ if(timer) return; started=true; timer=setInterval(tick,1000); }
+  function stopTimer(){ clearInterval(timer); timer=null; }
+
+  function start(){
+    stopTimer(); overlay.classList.remove("on");
+    first=null; lock=false; matched=0; moves=0; seconds=0; started=false;
+    timerEl.textContent="0:00"; movesEl.textContent="Moves: 0";
+    const picks=sample(PLAYERS,10);
+    const deck=shuffle(picks.concat(picks));
+    board.innerHTML="";
+    deck.forEach(p=>{
+      const t=document.createElement("button");
+      t.className="tile"; t.dataset.file=p.file; t.type="button";
+      t.setAttribute("aria-label","Memory card");
+      t.innerHTML=`<div class="tile-inner">
+        <div class="tile-face tile-back"><img src="${BACK}" alt=""></div>
+        <div class="tile-face tile-front"><img src="${CARDS}${p.file}.png" alt=""></div>
+      </div>`;
+      t.addEventListener("click",()=>flip(t));
+      board.appendChild(t);
+    });
+  }
+
+  function flip(t){
+    if(lock || t.classList.contains("up") || t.classList.contains("matched")) return;
+    if(!started) startTimer();
+    t.classList.add("up");
+    if(!first){ first=t; return; }
+    moves++; movesEl.textContent="Moves: "+moves;
+    if(first.dataset.file===t.dataset.file){
+      first.classList.add("matched"); t.classList.add("matched");
+      first=null; matched++;
+      if(matched===10) win();
+    } else {
+      lock=true; const a=first,b=t; first=null;
+      setTimeout(()=>{ a.classList.remove("up"); b.classList.remove("up"); lock=false; },800);
+    }
+  }
+
+  function win(){
+    stopTimer();
+    document.getElementById("mem-final").textContent=fmtTime(seconds);
+    document.getElementById("mem-final-moves").textContent="in "+moves+" moves";
+    setTimeout(()=>overlay.classList.add("on"),500);
+  }
+
+  document.getElementById("mem-restart").addEventListener("click",start);
+  document.getElementById("mem-again").addEventListener("click",start);
+  return { start, stopTimer };
+})();
+
+/* ═══════════ GUESS ═══════════ */
+const Guess = (() => {
+  const ROUNDS=5;
+  const optsEl=document.getElementById("guess-opts");
+  const img=document.getElementById("guess-img");
+  const card=document.getElementById("guess-card");
+  const mask=document.getElementById("guess-mask");
+  const verdict=document.getElementById("guess-verdict");
+  const checkBtn=document.getElementById("guess-check");
+  const nextBtn=document.getElementById("guess-next");
+  const roundEl=document.getElementById("guess-round");
+  const scoreEl=document.getElementById("guess-score");
+  const playEl=document.getElementById("guess-play");
+  const resultsEl=document.getElementById("guess-results");
+  let deck=[], idx=0, score=0, selected=null, answered=false, history=[];
+
+  function start(){
+    deck=sample(PLAYERS,ROUNDS); idx=0; score=0; history=[];
+    playEl.style.display=""; resultsEl.style.display="none";
+    scoreEl.textContent="Score: 0";
+    loadRound();
+  }
+
+  function loadRound(){
+    const correct=deck[idx];
+    selected=null; answered=false;
+    roundEl.textContent=`Round ${idx+1} / ${ROUNDS}`;
+    img.src=CARDS+correct.file+".png";
+    card.classList.remove("revealed");
+    mask.textContent="? ? ?";
+    verdict.textContent=""; verdict.className="verdict";
+    checkBtn.disabled=true; checkBtn.style.display=""; nextBtn.style.display="none";
+    // 3 distractors from other players
+    const distract=sample(PLAYERS.filter(p=>p.file!==correct.file),3);
+    const options=shuffle(distract.concat(correct));
+    optsEl.innerHTML="";
+    options.forEach(o=>{
+      const b=document.createElement("button");
+      b.className="opt"; b.type="button";
+      b.innerHTML=`<span class="dot"></span><span>${o.name}</span>`;
+      b.addEventListener("click",()=>select(b,o));
+      b.dataset.file=o.file;
+      optsEl.appendChild(b);
+    });
+  }
+
+  function select(btn,opt){
+    if(answered) return;
+    selected=opt;
+    optsEl.querySelectorAll(".opt").forEach(o=>o.classList.remove("sel"));
+    btn.classList.add("sel");
+    checkBtn.disabled=false;
+  }
+
+  function check(){
+    if(answered || !selected) return;
+    answered=true;
+    const correct=deck[idx];
+    const isRight=selected.file===correct.file;
+    if(isRight) score++;
+    history.push({player:correct, right:isRight});
+    scoreEl.textContent="Score: "+score;
+    // reveal name + colour the options
+    card.classList.add("revealed");
+    mask.textContent=correct.name;
+    optsEl.querySelectorAll(".opt").forEach(o=>{
+      o.disabled=true;
+      if(o.dataset.file===correct.file) o.classList.add("correct");
+      else if(o.dataset.file===selected.file) o.classList.add("wrong");
+    });
+    verdict.textContent = isRight ? "✓ Correct — "+correct.name : "✕ It was "+correct.name;
+    verdict.className = "verdict "+(isRight?"ok":"no");
+    checkBtn.style.display="none";
+    nextBtn.style.display="";
+    nextBtn.textContent = idx+1<ROUNDS ? "Next →" : "See results →";
+  }
+
+  function next(){
+    idx++;
+    if(idx<ROUNDS) loadRound();
+    else showResults();
+  }
+
+  function showResults(){
+    playEl.style.display="none"; resultsEl.style.display="block";
+    document.getElementById("res-score").textContent=score;
+    const rv=document.getElementById("res-verdict");
+    if(score===ROUNDS){ rv.textContent="Perfect — you win!"; rv.style.color="var(--lime)"; }
+    else if(score>=3){ rv.textContent="Nicely done"; rv.style.color="var(--lav)"; }
+    else { rv.textContent="Give it another go"; rv.style.color="rgba(245,245,245,0.5)"; }
+    const wrap=document.getElementById("res-cards"); wrap.innerHTML="";
+    history.forEach(h=>{
+      const d=document.createElement("div");
+      d.className="res-card "+(h.right?"right":"wrong");
+      d.innerHTML=`<img src="${CARDS}${h.player.file}.png" alt="${h.player.name}">
+        <span class="tag">${h.right?"✓":"✕"}</span>`;
+      wrap.appendChild(d);
+    });
+  }
+
+  checkBtn.addEventListener("click",check);
+  nextBtn.addEventListener("click",next);
+  document.getElementById("guess-again").addEventListener("click",start);
+  return { start };
+})();
+
+route();
+</script>
+</body>
+</html>
