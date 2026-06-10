@@ -130,7 +130,7 @@ button{font-family:inherit;cursor:pointer}
 .opt:disabled{cursor:default}
 .guess-card-wrap{display:flex;justify-content:center}
 .guess-card{position:relative;width:100%;max-width:300px;aspect-ratio:var(--card-aspect);border-radius:10px;overflow:hidden;border:1px solid rgba(195,171,255,0.22);box-shadow:0 10px 36px rgba(0,0,0,0.4)}
-.guess-card img{width:100%;height:100%;object-fit:cover;display:block}
+.guess-card img{width:100%;height:100%;object-fit:cover;display:block;will-change:filter}
 .name-mask{position:absolute;left:0;right:0;bottom:0;height:22%;
   display:flex;align-items:center;justify-content:center;
   background:linear-gradient(180deg,rgba(26,6,56,0.4),rgba(9,9,9,0.96));
@@ -228,6 +228,7 @@ button{font-family:inherit;cursor:pointer}
     <h2>Who is this player?</h2>
     <div class="right">
       <span class="chip" id="guess-round">Round 1 / 5</span>
+      <span class="chip lime" id="guess-worth">Worth: 5</span>
       <span class="chip lav" id="guess-score">Score: 0</span>
     </div>
   </div>
@@ -244,13 +245,13 @@ button{font-family:inherit;cursor:pointer}
     </div>
     <div class="verdict" id="guess-verdict"></div>
     <div class="guess-actions">
-      <button class="btn lime" id="guess-check" disabled>Check</button>
+      <button class="btn lime" id="guess-check" disabled>Lock in</button>
       <button class="btn" id="guess-next" style="display:none">Next →</button>
     </div>
   </div>
 
   <div class="results" id="guess-results" style="display:none">
-    <div class="score-big"><span id="res-score">0</span><span class="of"> / 5</span></div>
+    <div class="score-big"><span id="res-score">0</span><span class="of"> pts</span></div>
     <div class="verdict-big" id="res-verdict"></div>
     <div class="res-cards" id="res-cards"></div>
     <div class="guess-actions">
@@ -342,6 +343,7 @@ function route(){
   if(v==="memory") Memory.start();
   if(v==="guess")  Guess.start();
   if(v!=="memory") Memory.stopTimer();
+  if(v!=="guess")  Guess.stop();
   window.scrollTo(0,0);
 }
 window.addEventListener("hashchange",route);
@@ -408,7 +410,7 @@ const Memory = (() => {
 
 /* ═══════════ GUESS ═══════════ */
 const Guess = (() => {
-  const ROUNDS=5;
+  const ROUNDS=5, START_BLUR=18, REVEAL_MS=6000, MAX_PTS=5;
   const optsEl=document.getElementById("guess-opts");
   const img=document.getElementById("guess-img");
   const card=document.getElementById("guess-card");
@@ -418,12 +420,18 @@ const Guess = (() => {
   const nextBtn=document.getElementById("guess-next");
   const roundEl=document.getElementById("guess-round");
   const scoreEl=document.getElementById("guess-score");
+  const worthEl=document.getElementById("guess-worth");
   const playEl=document.getElementById("guess-play");
   const resultsEl=document.getElementById("guess-results");
-  let deck=[], idx=0, score=0, selected=null, answered=false, history=[];
+  let deck=[], idx=0, points=0, correctCount=0, selected=null, answered=false, history=[];
+  let startT=0, worth=MAX_PTS, worthTimer=null;
+
+  // Points available shrink from MAX_PTS (full blur) to 1 (fully revealed).
+  function worthAt(elapsed){ return Math.max(1, Math.ceil(MAX_PTS*(1-elapsed/REVEAL_MS))); }
+  function stopWorth(){ if(worthTimer){clearInterval(worthTimer); worthTimer=null;} }
 
   function start(){
-    deck=sample(PLAYERS,ROUNDS); idx=0; score=0; history=[];
+    deck=sample(PLAYERS,ROUNDS); idx=0; points=0; correctCount=0; history=[];
     playEl.style.display=""; resultsEl.style.display="none";
     scoreEl.textContent="Score: 0";
     loadRound();
@@ -437,19 +445,32 @@ const Guess = (() => {
     card.classList.remove("revealed");
     mask.textContent="? ? ?";
     verdict.textContent=""; verdict.className="verdict";
-    checkBtn.disabled=true; checkBtn.style.display=""; nextBtn.style.display="none";
-    // 3 distractors from other players
+    checkBtn.disabled=true; checkBtn.style.display=""; checkBtn.textContent="Lock in"; nextBtn.style.display="none";
+    // options: correct + 3 distinct distractors, shuffled
     const distract=sample(PLAYERS.filter(p=>p.file!==correct.file),3);
     const options=shuffle(distract.concat(correct));
     optsEl.innerHTML="";
     options.forEach(o=>{
       const b=document.createElement("button");
-      b.className="opt"; b.type="button";
+      b.className="opt"; b.type="button"; b.dataset.file=o.file;
       b.innerHTML=`<span class="dot"></span><span>${o.name}</span>`;
       b.addEventListener("click",()=>select(b,o));
-      b.dataset.file=o.file;
       optsEl.appendChild(b);
     });
+    // progressive blur reveal: heavy blur sharpening to 0 over REVEAL_MS
+    img.style.transition="none";
+    img.style.filter="blur("+START_BLUR+"px)";
+    void img.offsetWidth;                                   // force reflow so the transition runs
+    img.style.transition="filter "+(REVEAL_MS/1000)+"s linear";
+    img.style.filter="blur(0px)";
+    // worth countdown
+    worth=MAX_PTS; worthEl.textContent="Worth: "+MAX_PTS;
+    startT=Date.now(); stopWorth();
+    worthTimer=setInterval(()=>{
+      const e=Date.now()-startT;
+      worth=worthAt(e); worthEl.textContent="Worth: "+worth;
+      if(e>=REVEAL_MS) stopWorth();
+    },120);
   }
 
   function select(btn,opt){
@@ -460,56 +481,57 @@ const Guess = (() => {
     checkBtn.disabled=false;
   }
 
-  function check(){
+  function lock(){
     if(answered || !selected) return;
-    answered=true;
+    answered=true; stopWorth();
     const correct=deck[idx];
     const isRight=selected.file===correct.file;
-    if(isRight) score++;
-    history.push({player:correct, right:isRight});
-    scoreEl.textContent="Score: "+score;
-    // reveal name + colour the options
-    card.classList.add("revealed");
-    mask.textContent=correct.name;
+    const earned=isRight?worth:0;
+    if(isRight){ points+=earned; correctCount++; }
+    history.push({player:correct, right:isRight, earned});
+    scoreEl.textContent="Score: "+points;
+    // reveal: clear the blur fast + unmask the name
+    img.style.transition="filter .35s ease"; img.style.filter="blur(0px)";
+    card.classList.add("revealed"); mask.textContent=correct.name;
     optsEl.querySelectorAll(".opt").forEach(o=>{
       o.disabled=true;
       if(o.dataset.file===correct.file) o.classList.add("correct");
       else if(o.dataset.file===selected.file) o.classList.add("wrong");
     });
-    verdict.textContent = isRight ? "✓ Correct — "+correct.name : "✕ It was "+correct.name;
-    verdict.className = "verdict "+(isRight?"ok":"no");
+    verdict.textContent = isRight ? `✓ ${correct.name} · +${earned} pts` : "✕ It was "+correct.name;
+    verdict.className="verdict "+(isRight?"ok":"no");
     checkBtn.style.display="none";
-    nextBtn.style.display="";
-    nextBtn.textContent = idx+1<ROUNDS ? "Next →" : "See results →";
+    nextBtn.style.display=""; nextBtn.textContent = idx+1<ROUNDS ? "Next →" : "See results →";
   }
 
-  function next(){
-    idx++;
-    if(idx<ROUNDS) loadRound();
-    else showResults();
-  }
+  function next(){ idx++; if(idx<ROUNDS) loadRound(); else showResults(); }
 
   function showResults(){
+    stopWorth();
     playEl.style.display="none"; resultsEl.style.display="block";
-    document.getElementById("res-score").textContent=score;
+    document.getElementById("res-score").textContent=points;
     const rv=document.getElementById("res-verdict");
-    if(score===ROUNDS){ rv.textContent="Perfect — you win!"; rv.style.color="var(--lime)"; }
-    else if(score>=3){ rv.textContent="Nicely done"; rv.style.color="var(--lav)"; }
-    else { rv.textContent="Give it another go"; rv.style.color="rgba(245,245,245,0.5)"; }
+    let tier,col;
+    if(correctCount===ROUNDS && points>=21){ tier="Legendary eye — perfect & fast"; col="var(--lime)"; }
+    else if(points>=18){ tier="Sharp eye"; col="var(--lime)"; }
+    else if(points>=12){ tier="Solid"; col="var(--lav)"; }
+    else if(points>=7){ tier="Not bad"; col="var(--lav)"; }
+    else { tier="Keep practicing"; col="rgba(245,245,245,0.5)"; }
+    rv.textContent = tier + "  ·  " + correctCount + "/" + ROUNDS + " correct";
+    rv.style.color=col;
     const wrap=document.getElementById("res-cards"); wrap.innerHTML="";
     history.forEach(h=>{
       const d=document.createElement("div");
       d.className="res-card "+(h.right?"right":"wrong");
-      d.innerHTML=`<img src="${CARDS}${h.player.file}.png" alt="${h.player.name}">
-        <span class="tag">${h.right?"✓":"✕"}</span>`;
+      d.innerHTML=`<img src="${CARDS}${h.player.file}.png" alt="${h.player.name}"><span class="tag">${h.right?"✓":"✕"}</span>`;
       wrap.appendChild(d);
     });
   }
 
-  checkBtn.addEventListener("click",check);
+  checkBtn.addEventListener("click",lock);
   nextBtn.addEventListener("click",next);
   document.getElementById("guess-again").addEventListener("click",start);
-  return { start };
+  return { start, stop:stopWorth };
 })();
 
 route();

@@ -35,14 +35,19 @@ Title + two tiles (*Memory*, *Who is this player?*) + "← Back to album" link.
 
 ## Game 2 — Who is this player?
 - 5 rounds. Each round picks a random card (no repeats within a game).
-- Card shown on the right with its **bottom name banner masked** (`???` overlay over
-  the bottom ~20%). On the left, 4 name buttons: 1 correct + 3 random distinct
-  distractors from the pool, shuffled.
-- Flow: select a name → **Check** → reveal correct/wrong, unmask the real name.
-  +1 point per correct answer. Selection locked after Check; **Next** advances.
-- Win condition: 5/5.
+- **Progressive blur reveal:** the card starts heavily blurred (~18px → reads as a
+  colored silhouette) with its name banner masked, and sharpens to clear over ~6s.
+  (A true cut-out silhouette isn't possible — the photos are full-bleed with
+  backgrounds — so a tunable blur is the practical equivalent.)
+- On the left, 4 name buttons: 1 correct + 3 random distinct distractors, shuffled.
+- **Speed/clarity scoring:** a "Worth" meter counts down 5 → 1 as the blur clears.
+  Select a name → **Lock in** → awards the current Worth if correct (0 if wrong),
+  reveals the face + name, colors the options. **Next** advances.
+- Scoring tiers (max 25 over 5 rounds): ≥21 & all correct "Legendary eye", ≥18
+  "Sharp eye", ≥12 "Solid", ≥7 "Not bad", else "Keep practicing".
 - After round 5: **results board** showing the 5 cards — correct in color, wrong in
-  grayscale (B&W) — plus the score. Buttons: **Play again** · **Back to portal**.
+  grayscale (B&W) — plus total points and correct count. Buttons: **Play again** ·
+  **Back to portal**.
 
 ## Data
 A JS array `PLAYERS = [{file, name, country}, …]` for the 45 cards. Names read from the
