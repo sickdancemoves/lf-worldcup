@@ -13,7 +13,7 @@ A single-page album you flip through like a sticker book. Eight spreads:
 | # | Spread | Contents |
 |---|--------|----------|
 | 1 | **Cover** | Title lockup + a 2-3-2 diamond of hero cards |
-| 2 | 🇦🇷 Argentina | 6 players |
+| 2 | 🇦🇷 Argentina | 8 players |
 | 3 | 🇧🇷 Brasil | 9 players (inverted-pyramid grid) |
 | 4 | 🇺🇦 Ukraine I | 8 players |
 | 5 | 🇺🇦 Ukraine II | 9 players |
@@ -21,7 +21,7 @@ A single-page album you flip through like a sticker book. Eight spreads:
 | 7 | 🌎 Rest of the World II | 6 players |
 | 8 | **Back** | Edition colophon |
 
-**43 cards · 6 squads · 12 nations.**
+**45 cards · 6 squads · 12 nations.**
 
 ## Navigating
 
