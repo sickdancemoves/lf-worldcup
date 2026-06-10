@@ -97,7 +97,7 @@ html,body{width:100%;height:100%;background:var(--lf-black);font-family:'IBM Ple
 .ph-inner{
   position:relative;z-index:1;
   display:flex;align-items:center;justify-content:space-between;
-  padding:clamp(6px,0.9vh,12px) clamp(14px,2vw,36px) clamp(5px,0.75vh,10px);
+  padding:clamp(3px,0.55vh,8px) clamp(14px,2vw,36px) clamp(3px,0.45vh,6px);
 }
 .ph-ghost{
   position:absolute;bottom:-4px;left:clamp(10px,1.5vw,24px);
@@ -122,7 +122,7 @@ html,body{width:100%;height:100%;background:var(--lf-black);font-family:'IBM Ple
   display:flex;
   align-items:center;
   justify-content:center;
-  padding:clamp(8px,1.4vh,20px) clamp(16px,2.2vw,44px);
+  padding:clamp(4px,0.7vh,11px) clamp(12px,2vw,40px);
   overflow:hidden;
   position:relative;
 }
@@ -149,13 +149,13 @@ html,body{width:100%;height:100%;background:var(--lf-black);font-family:'IBM Ple
   display:grid;
   grid-template-columns:repeat(var(--cols),1fr);
   grid-template-rows:repeat(var(--rows),1fr);
-  gap:clamp(6px,0.9vw,14px);
+  gap:clamp(4px,0.7vw,10px);
   max-width:100%;
   max-height:100%;
   background:linear-gradient(135deg, rgba(153,136,196,0.05) 0%, rgba(255,255,255,0.02) 100%);
   border:1px solid rgba(255,255,255,0.06);
   border-radius:12px;
-  padding:clamp(4px,0.6vw,10px);
+  padding:clamp(3px,0.45vw,7px);
   position:relative;
   z-index:1;
 }
@@ -221,25 +221,20 @@ html,body{width:100%;height:100%;background:var(--lf-black);font-family:'IBM Ple
 }
 
 /* ─── CARD FLIP (3D) ───
-   Front face shows by default and stays in normal flow, so the card
-   keeps its intrinsic size and never resizes. Clicking flips to the
-   card back; hover keeps the holographic edge glow on .card. */
+   The grid is sized explicitly in JS, so the card has a definite size
+   independent of any image loading. Both faces are absolutely stacked:
+   the player front shows by default; a click flips to the card back.
+   Hover keeps the holographic edge glow on .card. */
 .card{perspective:900px;cursor:pointer}
-.cinner{position:relative;transform-style:preserve-3d;transition:transform 0.62s var(--ease-out)}
+.cinner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform 0.62s var(--ease-out)}
 .card.flipped .cinner{transform:rotateY(180deg)}
-.cface{backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:4px;overflow:hidden}
-.cface-front{position:relative}
-.cface-back{position:absolute;inset:0;transform:rotateY(180deg)}
+.cface{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:4px;overflow:hidden}
+.cface-back{transform:rotateY(180deg)}
 .cface img{width:100%;height:100%;object-fit:contain;object-position:center;display:block;pointer-events:none}
-.cface-front img{height:auto}
 
 /* ─── COVER / BACK TEXT SVGs ─── */
 .cov-text{display:block;width:100%;max-width:clamp(220px,30vw,460px);height:auto;max-height:62%;object-fit:contain}
 .back-text{display:block;width:100%;max-width:clamp(260px,42vw,640px);height:auto;object-fit:contain}
-
-/* ─── EMOJI (Twemoji images → consistent flag rendering everywhere) ─── */
-img.emoji{height:1em;width:1em;margin:0 .08em;vertical-align:-0.12em;display:inline-block}
-.ph-ghost img.emoji{opacity:0.5;vertical-align:-0.05em}
 
 /* ─── FOOTER ─── */
 .pf{flex:0 0 auto;padding:4px clamp(14px,2vw,36px);display:flex;justify-content:space-between;align-items:center}
@@ -423,6 +418,21 @@ body.accent-lime .cov-eye{color:#BFFE43 !important}
 .cov-card img{width:100%;height:100%;object-fit:cover;display:block}
 .cov-card:hover{border-color:rgba(195,171,255,0.45);box-shadow:0 0 20px rgba(195,171,255,0.15);transform:scale(1.03)}
 
+/* ─── SHORT / LANDSCAPE VIEWPORTS ───
+   On short screens (landscape phones/tablets) the card grids are
+   height-bound, so reclaim vertical space from the chrome to let the
+   cards grow. */
+@media (max-height:640px){
+  #nav{height:38px;flex:0 0 38px}
+  .ph-inner{padding:3px clamp(14px,2vw,36px) 2px}
+  .ph-eye{display:none}
+  .ph-title{font-size:clamp(18px,3.4vw,44px)}
+  .ph-meta{margin-top:0}
+  .ph-bar{height:2px}
+  .pb{padding:4px clamp(10px,1.6vw,30px)}
+  .pf{padding:2px clamp(14px,2vw,36px)}
+}
+
 </style>
 </head>
 <body class="cards-holo">
@@ -444,12 +454,12 @@ body.accent-lime .cov-eye{color:#BFFE43 !important}
 </svg></div>
     <div class="nsep"></div>
     <button class="np" onclick="goTo('cover')">Cover</button>
-    <button class="np" onclick="goTo('argentina')">&#127462;&#127479; ARG</button>
-    <button class="np" onclick="goTo('brasil')">&#127463;&#127479; BRA</button>
-    <button class="np" onclick="goTo('ukraine-a')">&#127482;&#127462; UKR I</button>
-    <button class="np" onclick="goTo('ukraine-b')">&#127482;&#127462; UKR II</button>
-    <button class="np" onclick="goTo('row-a')">&#127758; INT I</button>
-    <button class="np" onclick="goTo('row-b')">&#127758; INT II</button>
+    <button class="np" onclick="goTo('argentina')">ARG</button>
+    <button class="np" onclick="goTo('brasil')">BRA</button>
+    <button class="np" onclick="goTo('ukraine-a')">UKR I</button>
+    <button class="np" onclick="goTo('ukraine-b')">UKR II</button>
+    <button class="np" onclick="goTo('row-a')">INT I</button>
+    <button class="np" onclick="goTo('row-b')">INT II</button>
     <span class="nctr" id="nctr">1 / 8</span>
   </nav>
   <div id="stage">
@@ -477,9 +487,9 @@ body.accent-lime .cov-eye{color:#BFFE43 !important}
     <div class="ph-diag" style="background:repeating-linear-gradient(45deg,#5B96CC 0,#5B96CC 2px,transparent 2px,transparent 22px)"></div>
     <div class="ph-inner">
       <div class="ph-l">
-        <div class="ph-ghost" style="color:rgba(0,0,0,0.06)">🇦🇷</div>
+        <div class="ph-ghost" style="color:rgba(0,0,0,0.06)">AR</div>
         <p class="ph-eye" style="color:rgba(255,255,255,0.75)">LaFinteca · World Cup Album 2026</p>
-        <h1 class="ph-title" style="color:#FFFFFF">🇦🇷 ARGENTINA</h1>
+        <h1 class="ph-title" style="color:#FFFFFF">ARGENTINA</h1>
         <div class="ph-meta" style="color:rgba(255,255,255,0.60)">8 PLAYERS </div>
       </div>
       <div class="ph-r">
@@ -525,9 +535,9 @@ body.accent-lime .cov-eye{color:#BFFE43 !important}
     <div class="ph-diag" style="background:repeating-linear-gradient(45deg,#007A2F 0,#007A2F 2px,transparent 2px,transparent 22px)"></div>
     <div class="ph-inner">
       <div class="ph-l">
-        <div class="ph-ghost" style="color:rgba(255,255,255,0.06)">🇧🇷</div>
+        <div class="ph-ghost" style="color:rgba(255,255,255,0.06)">BR</div>
         <p class="ph-eye" style="color:#FFDF00">LaFinteca · World Cup Album 2026</p>
-        <h1 class="ph-title" style="color:#FFFFFF">🇧🇷 BRASIL</h1>
+        <h1 class="ph-title" style="color:#FFFFFF">BRASIL</h1>
         <div class="ph-meta" style="color:#FFDF00">9 PLAYERS </div>
       </div>
       <div class="ph-r">
@@ -574,9 +584,9 @@ body.accent-lime .cov-eye{color:#BFFE43 !important}
     <div class="ph-diag" style="background:repeating-linear-gradient(45deg,#004A99 0,#004A99 2px,transparent 2px,transparent 22px)"></div>
     <div class="ph-inner">
       <div class="ph-l">
-        <div class="ph-ghost" style="color:rgba(255,255,255,0.06)">🇺🇦</div>
+        <div class="ph-ghost" style="color:rgba(255,255,255,0.06)">UA</div>
         <p class="ph-eye" style="color:#FFD500">LaFinteca · World Cup Album 2026</p>
-        <h1 class="ph-title" style="color:#FFFFFF">🇺🇦 UKRAINE</h1>
+        <h1 class="ph-title" style="color:#FFFFFF">UKRAINE</h1>
         <div class="ph-meta" style="color:#FFD500">8 PLAYERS <span class="page-part" style="border-color:#FFD500;color:#FFD500">PAGE I</span></div>
       </div>
       <div class="ph-r">
@@ -622,9 +632,9 @@ body.accent-lime .cov-eye{color:#BFFE43 !important}
     <div class="ph-diag" style="background:repeating-linear-gradient(45deg,#004A99 0,#004A99 2px,transparent 2px,transparent 22px)"></div>
     <div class="ph-inner">
       <div class="ph-l">
-        <div class="ph-ghost" style="color:rgba(255,255,255,0.06)">🇺🇦</div>
+        <div class="ph-ghost" style="color:rgba(255,255,255,0.06)">UA</div>
         <p class="ph-eye" style="color:#FFD500">LaFinteca · World Cup Album 2026</p>
-        <h1 class="ph-title" style="color:#FFFFFF">🇺🇦 UKRAINE</h1>
+        <h1 class="ph-title" style="color:#FFFFFF">UKRAINE</h1>
         <div class="ph-meta" style="color:#FFD500">9 PLAYERS <span class="page-part" style="border-color:#FFD500;color:#FFD500">PAGE II</span></div>
       </div>
       <div class="ph-r">
@@ -671,9 +681,9 @@ body.accent-lime .cov-eye{color:#BFFE43 !important}
     <div class="ph-diag" style="background:repeating-linear-gradient(45deg,#C3ABFF 0,#C3ABFF 2px,transparent 2px,transparent 22px)"></div>
     <div class="ph-inner">
       <div class="ph-l">
-        <div class="ph-ghost" style="color:rgba(255,255,255,0.06)">🌎</div>
+        <div class="ph-ghost" style="color:rgba(255,255,255,0.06)">INT</div>
         <p class="ph-eye" style="color:#BFFE43">LaFinteca · World Cup Album 2026</p>
-        <h1 class="ph-title" style="color:#FFFFFF">🌎 REST OF THE WORLD</h1>
+        <h1 class="ph-title" style="color:#FFFFFF">REST OF THE WORLD</h1>
         <div class="ph-meta" style="color:#BFFE43">5 PLAYERS <span class="page-part" style="border-color:#BFFE43;color:#BFFE43">PAGE I</span></div>
       </div>
       <div class="ph-r">
@@ -716,9 +726,9 @@ body.accent-lime .cov-eye{color:#BFFE43 !important}
     <div class="ph-diag" style="background:repeating-linear-gradient(45deg,#C3ABFF 0,#C3ABFF 2px,transparent 2px,transparent 22px)"></div>
     <div class="ph-inner">
       <div class="ph-l">
-        <div class="ph-ghost" style="color:rgba(255,255,255,0.06)">🌎</div>
+        <div class="ph-ghost" style="color:rgba(255,255,255,0.06)">INT</div>
         <p class="ph-eye" style="color:#BFFE43">LaFinteca · World Cup Album 2026</p>
-        <h1 class="ph-title" style="color:#FFFFFF">🌎 REST OF THE WORLD</h1>
+        <h1 class="ph-title" style="color:#FFFFFF">REST OF THE WORLD</h1>
         <div class="ph-meta" style="color:#BFFE43">6 PLAYERS <span class="page-part" style="border-color:#BFFE43;color:#BFFE43">PAGE II</span></div>
       </div>
       <div class="ph-r">
@@ -783,10 +793,23 @@ function sizeGrids() {
     const rows = parseInt(g.dataset.rows);
     g.style.setProperty('--cols', cols);
     g.style.setProperty('--rows', rows);
-    // Container aspect: total width / total height
-    // = (cols * card_w) / (rows * card_h)
+    // Grid aspect = (cols * card_w) / (rows * card_h)
     const aspect = (cols * CARD_W) / (rows * CARD_H);
-    g.style.aspectRatio = aspect;
+    // Compute an explicit pixel size that fits the largest box of this
+    // aspect inside the body's content area. Doing the fit in JS (instead
+    // of leaning on aspect-ratio + content) means the grid never depends
+    // on a card image having loaded — lazy/off-screen pages size correctly.
+    const pb = g.closest('.pb');
+    if (!pb) { g.style.aspectRatio = aspect; return; }
+    const cs = getComputedStyle(pb);
+    const availW = pb.clientWidth  - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const availH = pb.clientHeight - parseFloat(cs.paddingTop)  - parseFloat(cs.paddingBottom);
+    if (availW <= 0 || availH <= 0) return;
+    let w = availW, h = w / aspect;
+    if (h > availH) { h = availH; w = h * aspect; }
+    g.style.aspectRatio = '';
+    g.style.width  = w + 'px';
+    g.style.height = h + 'px';
   });
 }
 
@@ -831,23 +854,6 @@ stage.addEventListener('touchend',e=>{
 sizeGrids();
 window.addEventListener('resize', sizeGrids);
 ui();
-</script>
-<!-- Twemoji: render flag/globe emoji as SVG images so they show identically
-     across browsers and in-app webviews. Scoped to #shell so the lime ✦ in
-     the tweaks button is left as-is. -->
-<script src="https://cdn.jsdelivr.net/npm/@twemoji/api@15.1.0/dist/twemoji.min.js" integrity="sha384-o28+zJO3/45GHIy+9TFKGaYnbt0KQcFRzyBrb0WSSrz7bPGwGI1d64worBiXPgXw" crossorigin="anonymous"></script>
-<script>
-(function(){
-  function parse(){
-    if(!window.twemoji) return;
-    twemoji.parse(document.getElementById('shell'), {
-      folder:'svg', ext:'.svg',
-      base:'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/'
-    });
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', parse);
-  else parse();
-})();
 </script>
 <button id="tweaks-toggle" type="button" aria-label="Toggle tweaks panel">
   <span class="tt-mark">✦</span> Tweaks
