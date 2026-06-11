@@ -445,15 +445,25 @@ body.accent-lime .cov-eye{color:#BFFE43 !important}
   .cov-right{flex:1 1 auto;padding:0 10px clamp(10px,2vh,20px);min-height:0;justify-content:flex-start}
   .cov-cards{transform:rotate(2deg);gap:6px;padding:6px}
   .cov-card{width:clamp(80px,25vw,128px)}
-  .cov-play{margin-top:8px}
+  /* smaller, less-dominant minigames button */
+  .cov-play{margin-top:6px;font-size:10px;letter-spacing:0.12em;padding:8px 15px;box-shadow:0 4px 16px rgba(191,254,67,0.18)}
 
   /* Team pages: a touch more room */
   .ph-inner{padding:5px 16px 4px}
   .pb{padding:8px 10px}
 
-  /* Card grids reflow to 2 / 3 columns (count set in sizeGrids) */
-  .grid.grid-mobile{grid-template-columns:repeat(var(--cols),1fr) !important;grid-template-rows:repeat(var(--rows),1fr) !important}
-  .grid.grid-mobile > .slot{grid-column:auto !important}
+  /* Card grids: 3 per row, last (short) row centered — inverted-pyramid */
+  .grid.grid-mobile{display:flex !important;flex-wrap:wrap;justify-content:center;align-content:center;gap:8px;width:100% !important;height:auto !important;aspect-ratio:auto !important;padding:8px}
+  .grid.grid-mobile > .slot{flex:0 0 calc((100% - 16px)/3);max-width:calc((100% - 16px)/3);height:auto;grid-column:auto !important}
+
+  /* Clear, tappable prev/next arrows (swipe alone isn't obvious on touch) */
+  .arr{width:38px;height:58px;opacity:1;color:var(--lf-lavender);
+    background:linear-gradient(rgba(195,171,255,0.22),rgba(153,136,196,0.12));
+    border-color:rgba(195,171,255,0.42);font-size:18px;box-shadow:0 4px 16px rgba(0,0,0,0.45)}
+  .arr.off{opacity:0 !important;pointer-events:none}
+  #dots{bottom:8px}
+  .dot{width:6px;height:6px}
+  .dot.on{width:16px}
 }
 
 </style>
@@ -813,18 +823,15 @@ let cur = 0;
 function sizeGrids() {
   const mobile = window.innerWidth <= 560;
   document.querySelectorAll('.grid').forEach(g => {
-    let cols, rows;
     if (mobile) {
-      // Reflow wide desktop grids into 2 (or 3 for 9-card pages) columns
-      const count = g.querySelectorAll('.slot').length;
-      cols = (count === 9) ? 3 : 2;
-      rows = Math.ceil(count / cols);
+      // Mobile: CSS handles a centered 3-per-row (inverted-pyramid) layout
       g.classList.add('grid-mobile');
-    } else {
-      cols = parseInt(g.dataset.cols);
-      rows = parseInt(g.dataset.rows);
-      g.classList.remove('grid-mobile');
+      g.style.width = ''; g.style.height = ''; g.style.aspectRatio = '';
+      return;
     }
+    g.classList.remove('grid-mobile');
+    const cols = parseInt(g.dataset.cols);
+    const rows = parseInt(g.dataset.rows);
     g.style.setProperty('--cols', cols);
     g.style.setProperty('--rows', rows);
     // Grid aspect = (cols * card_w) / (rows * card_h)
