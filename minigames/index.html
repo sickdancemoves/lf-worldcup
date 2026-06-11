@@ -100,6 +100,16 @@ button{font-family:inherit;cursor:pointer}
 .btn.lime:hover:not(:disabled){background:rgba(191,254,67,0.2);border-color:rgba(191,254,67,0.7);color:#fff}
 .btn.ghost{background:transparent;border-color:rgba(255,255,255,0.14);color:rgba(245,245,245,0.6)}
 .btn.ghost:hover{color:#fff;border-color:rgba(255,255,255,0.3)}
+.btn.violet{border-color:rgba(195,171,255,0.5);background:rgba(195,171,255,0.16);color:var(--lav)}
+.btn.violet:hover:not(:disabled){background:rgba(195,171,255,0.3);border-color:rgba(195,171,255,0.85);color:#fff}
+.btn.mid{border-color:rgba(193,212,161,0.5);background:rgba(193,212,161,0.12);color:#cfe0ad}
+.btn.mid:hover:not(:disabled){background:rgba(193,212,161,0.24);border-color:rgba(193,212,161,0.85);color:#fff}
+/* Next floats over the choices after answering */
+.opts-col{position:relative}
+.next-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:6;font-size:15px;padding:15px 34px;background:rgba(9,9,9,0.5);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-color:rgba(195,171,255,0.55);color:#fff;box-shadow:0 12px 36px rgba(0,0,0,0.6)}
+.next-overlay:hover:not(:disabled){background:rgba(195,171,255,0.28);border-color:rgba(195,171,255,0.85)}
+/* subtle in-game watermark */
+.game-mark{width:88px;margin:clamp(26px,5vh,52px) auto 0;opacity:0.3}
 .game-head{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:clamp(16px,2.5vh,26px)}
 .game-head h2{font-size:clamp(20px,3vw,28px);font-weight:800;letter-spacing:-0.02em}
 .game-head .right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -217,7 +227,7 @@ button{font-family:inherit;cursor:pointer}
     </a>
   </div>
   <div style="text-align:center;margin-top:clamp(22px,4vh,40px)">
-    <a class="btn ghost" href="https://lafinteca.atlassian.net/jira/for-you" target="_blank" rel="noopener">Go back to work →</a>
+    <a class="btn violet" href="https://lafinteca.atlassian.net/jira/for-you" target="_blank" rel="noopener">Go back to work →</a>
   </div>
 </section>
 
@@ -233,6 +243,7 @@ button{font-family:inherit;cursor:pointer}
     </div>
   </div>
   <div class="board" id="mem-board"></div>
+  <div style="text-align:center"><span class="lf-logo game-mark"></span></div>
 </section>
 
 <!-- ════ GUESS ════ -->
@@ -249,7 +260,10 @@ button{font-family:inherit;cursor:pointer}
 
   <div id="guess-play">
     <div class="guess-grid">
-      <div class="opts" id="guess-opts"></div>
+      <div class="opts-col">
+        <div class="opts" id="guess-opts"></div>
+        <button class="btn next-overlay" id="guess-next" style="display:none">Next →</button>
+      </div>
       <div class="guess-card-wrap">
         <div class="guess-card" id="guess-card">
           <img id="guess-img" alt="Guess this player"/>
@@ -258,9 +272,6 @@ button{font-family:inherit;cursor:pointer}
       </div>
     </div>
     <div class="verdict" id="guess-verdict"></div>
-    <div class="guess-actions">
-      <button class="btn" id="guess-next" style="display:none">Next →</button>
-    </div>
   </div>
 
   <div class="results" id="guess-results" style="display:none">
@@ -271,10 +282,11 @@ button{font-family:inherit;cursor:pointer}
     <p class="endphrase" id="res-phrase"></p>
     <div class="guess-actions">
       <button class="btn lime" id="guess-again">Play again</button>
-      <a class="btn" href="#">Back to minigames</a>
-      <a class="btn ghost" href="https://lafinteca.atlassian.net/jira/for-you" target="_blank" rel="noopener">Go back to work →</a>
+      <a class="btn mid" href="#">Back to minigames</a>
+      <a class="btn violet" href="https://lafinteca.atlassian.net/jira/for-you" target="_blank" rel="noopener">Go back to work →</a>
     </div>
   </div>
+  <div style="text-align:center"><span class="lf-logo game-mark"></span></div>
 </section>
 
 <!-- ════ MEMORY WIN OVERLAY ════ -->
@@ -288,8 +300,8 @@ button{font-family:inherit;cursor:pointer}
     <p class="endphrase" id="mem-phrase"></p>
     <div class="actions">
       <button class="btn lime" id="mem-again">Play again</button>
-      <a class="btn" href="#">Back to minigames</a>
-      <a class="btn ghost" href="https://lafinteca.atlassian.net/jira/for-you" target="_blank" rel="noopener">Go back to work →</a>
+      <a class="btn mid" href="#">Back to minigames</a>
+      <a class="btn violet" href="https://lafinteca.atlassian.net/jira/for-you" target="_blank" rel="noopener">Go back to work →</a>
     </div>
   </div>
 </div>
@@ -425,6 +437,11 @@ const Memory = (() => {
       t.addEventListener("click",()=>flip(t));
       board.appendChild(t);
     });
+    // peek: flash every card face-up briefly, then flip them all down
+    const allTiles=[...board.querySelectorAll(".tile")];
+    lock=true;
+    requestAnimationFrame(()=>allTiles.forEach(t=>t.classList.add("up")));
+    setTimeout(()=>{ allTiles.forEach(t=>t.classList.remove("up")); lock=false; }, 1200);
   }
 
   function flip(t){
