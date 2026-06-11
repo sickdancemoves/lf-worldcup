@@ -435,6 +435,27 @@ body.accent-lime .cov-eye{color:#BFFE43 !important}
   .pf{padding:2px clamp(14px,2vw,36px)}
 }
 
+/* ─── MOBILE PORTRAIT (phones) ─── */
+@media (max-width:560px){
+  /* Cover: stack the lockup over the hero cards */
+  .cov-body{flex-direction:column}
+  .cov-spine{display:none}
+  .cov-left{flex:0 0 auto;padding:clamp(14px,3vh,26px) 18px 4px;gap:12px;justify-content:flex-end}
+  .cov-text{max-width:min(80vw,340px);max-height:none}
+  .cov-right{flex:1 1 auto;padding:0 10px clamp(10px,2vh,20px);min-height:0;justify-content:flex-start}
+  .cov-cards{transform:rotate(2deg);gap:6px;padding:6px}
+  .cov-card{width:clamp(80px,25vw,128px)}
+  .cov-play{margin-top:8px}
+
+  /* Team pages: a touch more room */
+  .ph-inner{padding:5px 16px 4px}
+  .pb{padding:8px 10px}
+
+  /* Card grids reflow to 2 / 3 columns (count set in sizeGrids) */
+  .grid.grid-mobile{grid-template-columns:repeat(var(--cols),1fr) !important;grid-template-rows:repeat(var(--rows),1fr) !important}
+  .grid.grid-mobile > .slot{grid-column:auto !important}
+}
+
 </style>
 </head>
 <body class="cards-holo">
@@ -790,9 +811,20 @@ let cur = 0;
 
 // Set grid aspect ratios & CSS vars after layout
 function sizeGrids() {
+  const mobile = window.innerWidth <= 560;
   document.querySelectorAll('.grid').forEach(g => {
-    const cols = parseInt(g.dataset.cols);
-    const rows = parseInt(g.dataset.rows);
+    let cols, rows;
+    if (mobile) {
+      // Reflow wide desktop grids into 2 (or 3 for 9-card pages) columns
+      const count = g.querySelectorAll('.slot').length;
+      cols = (count === 9) ? 3 : 2;
+      rows = Math.ceil(count / cols);
+      g.classList.add('grid-mobile');
+    } else {
+      cols = parseInt(g.dataset.cols);
+      rows = parseInt(g.dataset.rows);
+      g.classList.remove('grid-mobile');
+    }
     g.style.setProperty('--cols', cols);
     g.style.setProperty('--rows', rows);
     // Grid aspect = (cols * card_w) / (rows * card_h)

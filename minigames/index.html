@@ -245,7 +245,6 @@ button{font-family:inherit;cursor:pointer}
     </div>
     <div class="verdict" id="guess-verdict"></div>
     <div class="guess-actions">
-      <button class="btn lime" id="guess-check" disabled>Lock in</button>
       <button class="btn" id="guess-next" style="display:none">Next →</button>
     </div>
   </div>
@@ -416,7 +415,6 @@ const Guess = (() => {
   const card=document.getElementById("guess-card");
   const mask=document.getElementById("guess-mask");
   const verdict=document.getElementById("guess-verdict");
-  const checkBtn=document.getElementById("guess-check");
   const nextBtn=document.getElementById("guess-next");
   const roundEl=document.getElementById("guess-round");
   const scoreEl=document.getElementById("guess-score");
@@ -445,7 +443,7 @@ const Guess = (() => {
     card.classList.remove("revealed");
     mask.textContent="? ? ?";
     verdict.textContent=""; verdict.className="verdict";
-    checkBtn.disabled=true; checkBtn.style.display=""; checkBtn.textContent="Lock in"; nextBtn.style.display="none";
+    nextBtn.style.display="none";
     // options: correct + 3 distinct distractors, shuffled
     const distract=sample(PLAYERS.filter(p=>p.file!==correct.file),3);
     const options=shuffle(distract.concat(correct));
@@ -454,7 +452,7 @@ const Guess = (() => {
       const b=document.createElement("button");
       b.className="opt"; b.type="button"; b.dataset.file=o.file;
       b.innerHTML=`<span class="dot"></span><span>${o.name}</span>`;
-      b.addEventListener("click",()=>select(b,o));
+      b.addEventListener("click",()=>answer(b,o));
       optsEl.appendChild(b);
     });
     // progressive blur reveal: heavy blur sharpening to 0 over REVEAL_MS
@@ -473,19 +471,15 @@ const Guess = (() => {
     },120);
   }
 
-  function select(btn,opt){
+  // First click on an option locks the answer in immediately.
+  function answer(btn,opt){
     if(answered) return;
+    answered=true; stopWorth();
     selected=opt;
     optsEl.querySelectorAll(".opt").forEach(o=>o.classList.remove("sel"));
     btn.classList.add("sel");
-    checkBtn.disabled=false;
-  }
-
-  function lock(){
-    if(answered || !selected) return;
-    answered=true; stopWorth();
     const correct=deck[idx];
-    const isRight=selected.file===correct.file;
+    const isRight=opt.file===correct.file;
     const earned=isRight?worth:0;
     if(isRight){ points+=earned; correctCount++; }
     history.push({player:correct, right:isRight, earned});
@@ -496,11 +490,10 @@ const Guess = (() => {
     optsEl.querySelectorAll(".opt").forEach(o=>{
       o.disabled=true;
       if(o.dataset.file===correct.file) o.classList.add("correct");
-      else if(o.dataset.file===selected.file) o.classList.add("wrong");
+      else if(o.dataset.file===opt.file) o.classList.add("wrong");
     });
     verdict.textContent = isRight ? `✓ ${correct.name} · +${earned} pts` : "✕ It was "+correct.name;
     verdict.className="verdict "+(isRight?"ok":"no");
-    checkBtn.style.display="none";
     nextBtn.style.display=""; nextBtn.textContent = idx+1<ROUNDS ? "Next →" : "See results →";
   }
 
@@ -528,7 +521,6 @@ const Guess = (() => {
     });
   }
 
-  checkBtn.addEventListener("click",lock);
   nextBtn.addEventListener("click",next);
   document.getElementById("guess-again").addEventListener("click",start);
   return { start, stop:stopWorth };
