@@ -469,7 +469,7 @@ const Memory = (() => {
     const allTiles=[...board.querySelectorAll(".tile")];
     lock=true;
     requestAnimationFrame(()=>allTiles.forEach(t=>t.classList.add("up")));
-    setTimeout(()=>{ allTiles.forEach(t=>t.classList.remove("up")); lock=false; }, 1200);
+    setTimeout(()=>{ allTiles.forEach(t=>t.classList.remove("up")); lock=false; }, 2500);
   }
 
   function flip(t){
